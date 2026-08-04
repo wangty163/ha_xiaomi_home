@@ -37,8 +37,14 @@
                 "data": {
                     "home_infos": "導入設備的家庭",
                     "area_sync_enabled": "同步房間名稱和設備區域",
-                    "area_name_rule": "房間名稱與設備區域同步規則",
                     "advanced_options": "高級設置選項"
+                }
+            },
+            "area_sync_rule": {
+                "title": "選擇同步邏輯",
+                "description": "已開啟房間名稱和設備區域同步。請選擇如何使用小米家庭的家庭名、房間名生成 Home Assistant 區域名稱及設備區域歸屬。",
+                "data": {
+                    "area_name_rule": "同步邏輯"
                 }
             },
             "advanced_options": {
@@ -124,11 +130,17 @@
                     "display_binary_mode": "二進制傳感器顯示模式",
                     "display_devices_changed_notify": "顯示設備狀態變化通知",
                     "area_sync_enabled": "同步房間名稱和設備區域",
-                    "area_name_rule": "房間名稱與設備區域同步規則",
                     "update_trans_rules": "更新實體轉換規則",
                     "update_lan_ctrl_config": "更新局域網控制配置",
                     "network_detect_config": "集成網絡配置",
                     "cover_dead_zone_width": "窗簾盲區寬度"
+                }
+            },
+            "area_sync_rule": {
+                "title": "選擇同步邏輯",
+                "description": "已開啟房間名稱和設備區域同步。請選擇如何使用小米家庭的家庭名、房間名生成 Home Assistant 區域名稱及設備區域歸屬。",
+                "data": {
+                    "area_name_rule": "同步邏輯"
                 }
             },
             "update_user_info": {

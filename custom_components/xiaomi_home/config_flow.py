@@ -92,8 +92,8 @@ from .miot.const import (
     MIHOME_CERT_EXPIRE_MARGIN
 )
 from .miot.area import (
-    CONF_AREA_SYNC_ENABLED, CONF_AREA_SYNC_MANAGED_AREAS,
-    area_sync_is_enabled)
+    AREA_SYNC_RULES, CONF_AREA_SYNC_ENABLED, CONF_AREA_SYNC_MANAGED_AREAS,
+    area_sync_is_enabled, area_sync_rule_options)
 from .miot.miot_cloud import MIoTHttpClient, MIoTOauthClient
 from .miot.miot_storage import MIoTStorage, MIoTCert
 from .miot.miot_mdns import MipsService
@@ -134,6 +134,7 @@ class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _hide_non_standard_entities: bool
     _display_binary_mode: list[str]
     _display_devices_changed_notify: list[str]
+    _show_advanced_options: bool
 
     _cloud_server: str
     _integration_language: str
@@ -172,6 +173,7 @@ class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._hide_non_standard_entities = False
         self._display_binary_mode = ['bool']
         self._display_devices_changed_notify = ['add', 'del', 'offline']
+        self._show_advanced_options = False
         self._auth_info = {}
         self._nick_name = DEFAULT_NICK_NAME
         self._home_selected = {}
@@ -685,10 +687,10 @@ class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         'homes'][device_source].items():
                     if home_id in home_selected:
                         self._home_selected[home_id] = home_info
-            self._area_name_rule = user_input.get(
-                'area_name_rule', self._area_name_rule)
             self._area_sync_enabled = user_input.get(
                 CONF_AREA_SYNC_ENABLED, self._area_sync_enabled)
+            self._show_advanced_options = user_input.get(
+                'advanced_options', False)
             # Storage device list
             devices_list: dict[str, dict] = {
                 did: dev_info
@@ -709,7 +711,9 @@ class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._uid, self._cloud_server)
                 return await self.__show_homes_select_form(
                     'devices_storage_failed')
-            if user_input.get('advanced_options', False):
+            if self._area_sync_enabled:
+                return await self.async_step_area_sync_rule()
+            if self._show_advanced_options:
                 return await self.async_step_advanced_options()
             return await self.config_flow_done()
         except Exception as err:
@@ -733,11 +737,6 @@ class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     default=self._area_sync_enabled  # type: ignore
                 ): bool,
                 vol.Required(
-                    'area_name_rule',
-                    default=self._area_name_rule  # type: ignore
-                ): vol.In(self._miot_i18n.translate(
-                    key='config.room_name_rule')),
-                vol.Required(
                     'advanced_options', default=False  # type: ignore
                 ): bool,
             }),
@@ -745,6 +744,29 @@ class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 'nick_name': self._nick_name,
             },
+            last_step=False,
+        )
+
+    async def async_step_area_sync_rule(
+        self, user_input: Optional[dict] = None
+    ):
+        """Select the synchronization rule only after sync is enabled."""
+        if user_input:
+            self._area_name_rule = user_input.get(
+                'area_name_rule', self.DEFAULT_AREA_NAME_RULE)
+            if self._show_advanced_options:
+                return await self.async_step_advanced_options()
+            return await self.config_flow_done()
+        return self.async_show_form(
+            step_id='area_sync_rule',
+            data_schema=vol.Schema({
+                vol.Required(
+                    'area_name_rule',
+                    default=self._area_name_rule  # type: ignore
+                ): vol.In(area_sync_rule_options(
+                    self._miot_i18n.translate(
+                        key='config.room_name_rule'))),
+            }),
             last_step=False,
         )
 
@@ -1085,6 +1107,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self._area_sync_enabled = area_sync_is_enabled(self._entry_data)
         self._area_name_rule = self._entry_data.get(
             'area_name_rule', XiaomiMihomeConfigFlow.DEFAULT_AREA_NAME_RULE)
+        if self._area_name_rule not in AREA_SYNC_RULES:
+            self._area_name_rule = XiaomiMihomeConfigFlow.DEFAULT_AREA_NAME_RULE
 
         self._oauth_redirect_url_full = ''
         self._auth_info = {}
@@ -1360,11 +1384,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         default=self._area_sync_enabled  # type: ignore
                     ): bool,
                     vol.Required(
-                        'area_name_rule',
-                        default=self._area_name_rule  # type: ignore
-                    ): vol.In(self._miot_i18n.translate(
-                        key='config.room_name_rule')),
-                    vol.Required(
                         'update_lan_ctrl_config',
                         default=self._opt_lan_ctrl_cfg  # type: ignore
                     ): bool,
@@ -1423,8 +1442,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             'display_devices_changed_notify', self._display_devs_notify)
         self._area_sync_enabled_new = user_input.get(
             CONF_AREA_SYNC_ENABLED, self._area_sync_enabled)
-        self._area_name_rule_new = user_input.get(
-            'area_name_rule', self._area_name_rule)
         self._update_trans_rules = user_input.get(
             'update_trans_rules', self._update_trans_rules)
         self._opt_lan_ctrl_cfg = user_input.get(
@@ -1434,7 +1451,28 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self._cover_width_new = user_input.get(
             'cover_dead_zone_width', self._cover_dz_width)
 
+        if self._area_sync_enabled_new:
+            return await self.async_step_area_sync_rule()
         return await self.async_step_update_user_info()
+
+    async def async_step_area_sync_rule(self, user_input=None):
+        """Select the synchronization rule only after sync is enabled."""
+        if user_input:
+            self._area_name_rule_new = user_input.get(
+                'area_name_rule', self._area_name_rule)
+            return await self.async_step_update_user_info()
+        return self.async_show_form(
+            step_id='area_sync_rule',
+            data_schema=vol.Schema({
+                vol.Required(
+                    'area_name_rule',
+                    default=self._area_name_rule  # type: ignore
+                ): vol.In(area_sync_rule_options(
+                    self._miot_i18n.translate(
+                        key='config.room_name_rule'))),
+            }),
+            last_step=False,
+        )
 
     async def async_step_update_user_info(self, user_input=None):
         if not self._update_user_info:
@@ -2049,7 +2087,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self._entry_data[CONF_AREA_SYNC_ENABLED] = (
                 self._area_sync_enabled_new)
             self._need_reload = True
-        if self._area_name_rule_new != self._area_name_rule:
+        if (
+            self._area_sync_enabled_new
+            and self._area_name_rule_new != self._entry_data.get(
+                'area_name_rule')
+        ):
             self._entry_data['area_name_rule'] = self._area_name_rule_new
             self._need_reload = True
         # Update display_devices_changed_notify
