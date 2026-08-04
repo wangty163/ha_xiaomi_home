@@ -414,13 +414,9 @@ class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): bool,
             }),
             errors={'base': reason},
-            description_placeholders={
-                'broker_host':
-                    f'{self._cloud_server}-{DEFAULT_CLOUD_BROKER_HOST}:8883',
-                'http_host': (
-                    DEFAULT_OAUTH2_API_HOST
-                    if self._cloud_server == DEFAULT_CLOUD_SERVER
-                    else f'{self._cloud_server}.{DEFAULT_OAUTH2_API_HOST}')},
+            description_placeholders=(
+                _network_detect_description_placeholders(
+                    self._cloud_server)),
             last_step=False
         )
 
@@ -1924,13 +1920,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): bool,
             }),
             errors={'base': reason},
-            description_placeholders={
-                'broker_host':
-                    f'{self._cloud_server}-{DEFAULT_CLOUD_BROKER_HOST}:8883',
-                'http_host': (
-                    DEFAULT_OAUTH2_API_HOST
-                    if self._cloud_server == DEFAULT_CLOUD_SERVER
-                    else f'{self._cloud_server}.{DEFAULT_OAUTH2_API_HOST}')},
+            description_placeholders=(
+                _network_detect_description_placeholders(
+                    self._cloud_server)),
             last_step=False
         )
 
@@ -2171,3 +2163,22 @@ def _handle_network_detect_addr(
                 pass
             invalid_list.append(addr)
     return ip_list, url_list, invalid_list
+
+
+def _network_detect_description_placeholders(
+    cloud_server: str
+) -> dict[str, str]:
+    """Build URL placeholders for network-detection flow descriptions."""
+    http_host = (
+        DEFAULT_OAUTH2_API_HOST
+        if cloud_server == DEFAULT_CLOUD_SERVER
+        else f'{cloud_server}.{DEFAULT_OAUTH2_API_HOST}')
+    return {
+        'sample_url': 'https://www.bing.com',
+        'oauth2_auth_url': OAUTH2_AUTH_URL,
+        'http_api_url': f'https://{http_host}/app/v2/ha/oauth/get_token',
+        'spec_api_url': (
+            'https://miot-spec.org/miot-spec-v2/template/list/device'),
+        'mqtt_broker_url': (
+            f'mqtts://{cloud_server}-{DEFAULT_CLOUD_BROKER_HOST}:8883'),
+    }
