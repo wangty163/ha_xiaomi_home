@@ -307,6 +307,9 @@ class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     default=False  # type: ignore
                 ): bool,
             }),
+            description_placeholders={
+                'oauth_redirect_url': OAUTH_REDIRECT_URL,
+            },
             errors={'base': reason},
             last_step=False,
         )
@@ -1183,6 +1186,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             }),
             description_placeholders={
                 'cloud_server': CLOUD_SERVERS[self._cloud_server],
+                'oauth_redirect_url': OAUTH_REDIRECT_URL,
             },
             last_step=False,
         )

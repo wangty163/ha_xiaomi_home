@@ -54,7 +54,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.components import persistent_notification
 from homeassistant.helpers import (
-    area_registry, device_registry, entity_registry)
+    area_registry, config_validation as cv, device_registry, entity_registry)
 from homeassistant.helpers.event import async_track_time_interval
 
 from .miot.area import AreaSyncResult, sync_device_area_entries
@@ -71,6 +71,7 @@ from .miot.miot_client import MIoTClient, get_miot_instance_async
 
 _LOGGER = logging.getLogger(__name__)
 AREA_SYNC_INTERVAL = timedelta(hours=1)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 def _sync_device_areas(
