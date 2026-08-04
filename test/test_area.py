@@ -263,6 +263,22 @@ def test_area_sync_is_enabled_keeps_legacy_behavior():
 
 
 @pytest.mark.github
+def test_area_sync_rule_options_excludes_legacy_off_value():
+    from miot.area import area_sync_rule_options
+
+    assert area_sync_rule_options({
+        'none': '不同步',
+        'home_room': '家庭名 和 房间名',
+        'room': '房间名',
+        'home': '家庭名',
+    }) == {
+        'home_room': '家庭名 和 房间名',
+        'room': '房间名',
+        'home': '家庭名',
+    }
+
+
+@pytest.mark.github
 def test_format_area_sync_notification_in_chinese():
     from miot.area import (
         AreaSyncResult, DeviceAreaChange, format_area_sync_notification)
@@ -310,10 +326,10 @@ def test_area_sync_control_labels_describe_both_effects():
     expected = {
         'en': (
             'Synchronize room names and device areas',
-            'Room name and device area sync rule'),
+            'Synchronization logic'),
         'zh-Hans': (
             '同步房间名称和设备区域',
-            '房间名称与设备区域同步规则'),
+            '同步逻辑'),
     }
 
     for language, labels in expected.items():
@@ -323,7 +339,13 @@ def test_area_sync_control_labels_describe_both_effects():
         setup_data = translation['config']['step']['homes_select']['data']
         options_data = translation['options']['step'][
             'config_options']['data']
-        assert (setup_data['area_sync_enabled'],
-                setup_data['area_name_rule']) == labels
-        assert (options_data['area_sync_enabled'],
-                options_data['area_name_rule']) == labels
+        setup_rule_data = translation['config']['step'][
+            'area_sync_rule']['data']
+        options_rule_data = translation['options']['step'][
+            'area_sync_rule']['data']
+        assert setup_data['area_sync_enabled'] == labels[0]
+        assert options_data['area_sync_enabled'] == labels[0]
+        assert setup_rule_data['area_name_rule'] == labels[1]
+        assert options_rule_data['area_name_rule'] == labels[1]
+        assert 'area_name_rule' not in setup_data
+        assert 'area_name_rule' not in options_data

@@ -41,6 +41,17 @@ def area_sync_is_enabled(entry_data: dict) -> bool:
     return entry_data.get('area_name_rule') in AREA_SYNC_RULES
 
 
+def area_sync_rule_options(
+    translated_options: dict[str, str]
+) -> dict[str, str]:
+    """Return actual synchronization rules, excluding the legacy off value."""
+    return {
+        rule: label
+        for rule, label in translated_options.items()
+        if rule in AREA_SYNC_RULES
+    }
+
+
 def _area_name_by_id(area_registry: Any, area_id: Optional[str]) -> None | str:
     if not area_id:
         return None
