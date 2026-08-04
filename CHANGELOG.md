@@ -1,4 +1,8 @@
 # CHANGELOG
+## v0.4.9
+### Fixed
+- Keep translation placeholders consistent across all supported languages while satisfying current Home Assistant translation validation.
+
 ## v0.4.8
 ### Added
 - Keep existing Home Assistant device areas synchronized with the current Xiaomi Home home and room metadata. The selected Room Name Sync Mode is applied at integration startup and refreshed every hour; "Do not synchronize" keeps Home Assistant areas untouched.
