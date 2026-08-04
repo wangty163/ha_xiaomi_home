@@ -36,6 +36,7 @@
                 "description": "## 使用介紹\r\n### 導入設備的家庭\r\n集成將添加已選中家庭中的設備。\r\n### 房間名同步模式\r\n將設備從米家APP同步到 Home Assistant 時，設備在 Home Assistant 中所處區域的名稱的命名方式將遵循以下規則。注意，設備同步過程不會改變米家APP中家庭和房間的設置。\r\n- 不同步：設備不會被添加至任何區域。\r\n- 其它選項：設備所添加到的區域以米家APP中的家庭或房間名稱命名。\r\n### 高級設置選項\r\n展示高級設置選項，對集成的專業配置選項進行修改。\r\n\r\n&emsp;\r\n### {nick_name} 您好！請選擇您想要添加的設備所處家庭。",
                 "data": {
                     "home_infos": "導入設備的家庭",
+                    "area_sync_enabled": "將房間同步到 Home Assistant 區域",
                     "area_name_rule": "房間名同步模式",
                     "advanced_options": "高級設置選項"
                 }
@@ -122,6 +123,8 @@
                     "hide_non_standard_entities": "隱藏非標準生成實體",
                     "display_binary_mode": "二進制傳感器顯示模式",
                     "display_devices_changed_notify": "顯示設備狀態變化通知",
+                    "area_sync_enabled": "將房間同步到 Home Assistant 區域",
+                    "area_name_rule": "區域命名規則",
                     "update_trans_rules": "更新實體轉換規則",
                     "update_lan_ctrl_config": "更新局域網控制配置",
                     "network_detect_config": "集成網絡配置",

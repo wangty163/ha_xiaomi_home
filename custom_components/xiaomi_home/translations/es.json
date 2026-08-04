@@ -36,6 +36,7 @@
                 "description": "## Introducción\r\n### Importar la familia del dispositivo\r\nLa integración añadirá dispositivos de la familia seleccionada.\r\n### Modo de sincronización del nombre de la habitación\r\nAl sincronizar dispositivos desde la APP Mi Home a Home Assistant, el nombre del área en Home Assistant seguirá las siguientes reglas. Tenga en cuenta que el proceso de sincronización no cambiará la configuración de la familia y la habitación en la APP Mi Home.\r\n- No sincronizar: El dispositivo no se añadirá a ninguna área.\r\n- Otras opciones: El área a la que se añade el dispositivo se nombrará según el nombre de la familia o la habitación en la APP Mi Home.\r\n### Configuración avanzada\r\nMostrar configuración avanzada para modificar las opciones de configuración profesional de la integración.\r\n\r\n&emsp;\r\n### {nick_name} ¡Hola! Por favor, seleccione la familia a la que desea añadir el dispositivo.",
                 "data": {
                     "home_infos": "Importar la familia del dispositivo",
+                    "area_sync_enabled": "Synchronize rooms to Home Assistant areas",
                     "area_name_rule": "Modo de sincronización del nombre de la habitación",
                     "advanced_options": "Configuración avanzada"
                 }
@@ -122,6 +123,8 @@
                     "hide_non_standard_entities": "Ocultar entidades generadas no estándar",
                     "display_binary_mode": "Modo de visualización del sensor binario",
                     "display_devices_changed_notify": "Mostrar notificaciones de cambio de estado del dispositivo",
+                    "area_sync_enabled": "Synchronize rooms to Home Assistant areas",
+                    "area_name_rule": "Area naming rule",
                     "update_trans_rules": "Actualizar reglas de conversión de entidad",
                     "update_lan_ctrl_config": "Actualizar configuración de control LAN",
                     "network_detect_config": "Configuración de Red Integrada",
