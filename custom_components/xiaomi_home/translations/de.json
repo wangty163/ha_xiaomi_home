@@ -36,6 +36,7 @@
                 "description": "## Gebrauchsanweisung\r\n### Familienimport für importierte Geräte\r\nDie Integration fügt Geräte aus den ausgewählten Familien hinzu.\r\n### Raumnamensynchronisationsmodus\r\nWenn Geräte von der Xiaomi Home App zu Home Assistant synchronisiert werden, wird die Bezeichnung des Bereichs, in dem sich die Geräte in Home Assistant befinden, nach folgenden Regeln benannt. Beachten Sie, dass das Synchronisieren von Geräten den von Xiaomi Home App festgelegten Familien- und Raum-Einstellungen nicht ändert.\r\n- Nicht synchronisieren: Das Gerät wird keinem Bereich hinzugefügt.\r\n- Andere Optionen: Der Bereich, in den das Gerät aufgenommen wird, wird nach dem Namen der Familie oder des Raums in der Xiaomi Home App benannt.\r\n### Erweiterte Einstellungen\r\nZeigen Sie erweiterte Einstellungen an, um die professionellen Konfigurationsoptionen der Integration zu ändern.\r\n\r\n&emsp;\r\n### {nick_name} Hallo! Bitte wählen Sie die Familie aus, zu der Sie das Gerät hinzufügen möchten.",
                 "data": {
                     "home_infos": "Familienimport für importierte Geräte",
+                    "area_sync_enabled": "Synchronize rooms to Home Assistant areas",
                     "area_name_rule": "Raumnamensynchronisationsmodus",
                     "advanced_options": "Erweiterte Einstellungen"
                 }
@@ -122,6 +123,8 @@
                     "hide_non_standard_entities": "Verstecke Nicht-Standard-Entitäten",
                     "display_binary_mode": "Binärsensor-Anzeigemodus",
                     "display_devices_changed_notify": "Gerätestatusänderungen anzeigen",
+                    "area_sync_enabled": "Synchronize rooms to Home Assistant areas",
+                    "area_name_rule": "Area naming rule",
                     "update_trans_rules": "Entitätskonvertierungsregeln aktualisieren",
                     "update_lan_ctrl_config": "LAN-Steuerungskonfiguration aktualisieren",
                     "network_detect_config": "Integrierte Netzwerkkonfiguration",

@@ -33,9 +33,10 @@
             },
             "homes_select": {
                 "title": "Select Family and Device",
-                "description": "## Introduction\r\n### Import Device's Family\r\nThe integration will add devices from the selected family.\r\n### Room Name Sync Mode\r\nWhen syncing devices from the Mi Home APP to Home Assistant, the naming of the area in Home Assistant will follow the rules below. Note that the sync process will not change the family and room settings in the Mi Home APP.\r\n- Do not sync: The device will not be added to any area.\r\n- Other options: The area to which the device is added will be named after the family or room name in the Mi Home APP.\r\n### Advanced Settings\r\nShow advanced settings to modify the professional configuration options of the integration.\r\n\r\n&emsp;\r\n### {nick_name} Hello! Please select the family to which you want to add the device.",
+                "description": "## Introduction\r\n### Import Device's Family\r\nThe integration will add devices from the selected family.\r\n### Synchronize Xiaomi Home rooms to Home Assistant areas\r\nWhen enabled, the integration checks Xiaomi Home room metadata at startup and every hour, then moves existing Home Assistant devices to the corresponding areas. It also creates required areas and safely removes only unused areas previously created by this feature. A Home Assistant notification is sent whenever a device is moved or an area is created or deleted. This does not change Xiaomi Home.\r\n### Room Name Sync Mode\r\nSelect how Home Assistant area names are generated from the Xiaomi Home family and room names.\r\n### Advanced Settings\r\nShow advanced settings to modify the professional configuration options of the integration.\r\n\r\n&emsp;\r\n### {nick_name} Hello! Please select the family to which you want to add the device.",
                 "data": {
                     "home_infos": "Import Device's Family",
+                    "area_sync_enabled": "Synchronize rooms to Home Assistant areas",
                     "area_name_rule": "Room Name Sync Mode",
                     "advanced_options": "Advanced Settings"
                 }
@@ -113,7 +114,7 @@
             },
             "config_options": {
                 "title": "Configuration Options",
-                "description": "### Hello, {nick_name}\r\n\r\nXiaomi ID: {uid}\r\nCurrent Login Region: {cloud_server}\r\nIntegration Instance ID: {instance_id}\r\n\r\nPlease select the options you need to configure, then click NEXT.",
+                "description": "### Hello, {nick_name}\r\n\r\nXiaomi ID: {uid}\r\nCurrent Login Region: {cloud_server}\r\nIntegration Instance ID: {instance_id}\r\n\r\nRoom synchronization checks Xiaomi Home at startup and every hour. When it moves a device or creates or safely deletes an integration-managed area, Home Assistant sends a notification.\r\n\r\nPlease select the options you need to configure, then click NEXT.",
                 "data": {
                     "integration_language": "Integration Language",
                     "update_user_info": "Update user information",
@@ -122,6 +123,8 @@
                     "hide_non_standard_entities": "Hide non-standard created entities",
                     "display_binary_mode": "Binary Sensor Display Mode",
                     "display_devices_changed_notify": "Display device status change notifications",
+                    "area_sync_enabled": "Synchronize rooms to Home Assistant areas",
+                    "area_name_rule": "Area naming rule",
                     "update_trans_rules": "Update entity conversion rules",
                     "update_lan_ctrl_config": "Update LAN control configuration",
                     "network_detect_config": "Integrated network configuration",

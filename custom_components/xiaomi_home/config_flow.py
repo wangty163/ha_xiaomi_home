@@ -91,6 +91,9 @@ from .miot.const import (
     NETWORK_REFRESH_INTERVAL,
     MIHOME_CERT_EXPIRE_MARGIN
 )
+from .miot.area import (
+    CONF_AREA_SYNC_ENABLED, CONF_AREA_SYNC_MANAGED_AREAS,
+    area_sync_is_enabled)
 from .miot.miot_cloud import MIoTHttpClient, MIoTOauthClient
 from .miot.common import get_system_info_str
 from .miot.miot_storage import MIoTStorage, MIoTCert
@@ -126,6 +129,7 @@ class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _uid: str
     _uuid: str
     _ctrl_mode: str
+    _area_sync_enabled: bool
     _area_name_rule: str
     _action_debug: bool
     _hide_non_standard_entities: bool
@@ -163,6 +167,7 @@ class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._uid = ''
         self._uuid = ''   # MQTT client id
         self._ctrl_mode = DEFAULT_CTRL_MODE
+        self._area_sync_enabled = True
         self._area_name_rule = self.DEFAULT_AREA_NAME_RULE
         self._action_debug = False
         self._hide_non_standard_entities = False
@@ -691,6 +696,8 @@ class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         self._home_selected[home_id] = home_info
             self._area_name_rule = user_input.get(
                 'area_name_rule', self._area_name_rule)
+            self._area_sync_enabled = user_input.get(
+                CONF_AREA_SYNC_ENABLED, self._area_sync_enabled)
             # Storage device list
             devices_list: dict[str, dict] = {
                 did: dev_info
@@ -730,6 +737,10 @@ class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({
                 vol.Required('home_infos'): cv.multi_select(
                     self._cc_home_list_show),
+                vol.Required(
+                    CONF_AREA_SYNC_ENABLED,
+                    default=self._area_sync_enabled  # type: ignore
+                ): bool,
                 vol.Required(
                     'area_name_rule',
                     default=self._area_name_rule  # type: ignore
@@ -963,6 +974,7 @@ class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 'ctrl_mode': self._ctrl_mode,
                 'home_selected': self._home_selected,
                 'devices_filter': self._devices_filter,
+                CONF_AREA_SYNC_ENABLED: self._area_sync_enabled,
                 'area_name_rule': self._area_name_rule,
                 'action_debug': self._action_debug,
                 'hide_non_standard_entities':
@@ -1008,6 +1020,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     _nick_name: str
     _home_selected_list: list
     _devices_filter: dict
+    _area_sync_enabled: bool
+    _area_name_rule: str
     _action_debug: bool
     _hide_non_standard_entities: bool
     _display_binary_mode: list[str]
@@ -1027,6 +1041,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     _action_debug_new: bool
     _hide_non_standard_entities_new: bool
     _display_binary_mode_new: list[str]
+    _area_sync_enabled_new: bool
+    _area_name_rule_new: str
     _update_user_info: bool
     _update_devices: bool
     _update_trans_rules: bool
@@ -1075,6 +1091,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self._home_selected_list = list(
             self._entry_data['home_selected'].keys())
         self._devices_filter = self._entry_data.get('devices_filter', {})
+        self._area_sync_enabled = area_sync_is_enabled(self._entry_data)
+        self._area_name_rule = self._entry_data.get(
+            'area_name_rule', XiaomiMihomeConfigFlow.DEFAULT_AREA_NAME_RULE)
 
         self._oauth_redirect_url_full = ''
         self._auth_info = {}
@@ -1089,6 +1108,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self._action_debug_new = False
         self._hide_non_standard_entities_new = False
         self._display_binary_mode_new = []
+        self._area_sync_enabled_new = self._area_sync_enabled
+        self._area_name_rule_new = self._area_name_rule
         self._cover_width_new = self._cover_dz_width
         self._update_user_info = False
         self._update_devices = False
@@ -1347,6 +1368,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         self._miot_i18n.translate(
                             'config.device_state')),  # type: ignore
                     vol.Required(
+                        CONF_AREA_SYNC_ENABLED,
+                        default=self._area_sync_enabled  # type: ignore
+                    ): bool,
+                    vol.Required(
+                        'area_name_rule',
+                        default=self._area_name_rule  # type: ignore
+                    ): vol.In(self._miot_i18n.translate(
+                        key='config.room_name_rule')),
+                    vol.Required(
                         'update_lan_ctrl_config',
                         default=self._opt_lan_ctrl_cfg  # type: ignore
                     ): bool,
@@ -1403,6 +1433,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             'display_binary_mode', self._display_binary_mode)
         self._display_devs_notify = user_input.get(
             'display_devices_changed_notify', self._display_devs_notify)
+        self._area_sync_enabled_new = user_input.get(
+            CONF_AREA_SYNC_ENABLED, self._area_sync_enabled)
+        self._area_name_rule_new = user_input.get(
+            'area_name_rule', self._area_name_rule)
         self._update_trans_rules = user_input.get(
             'update_trans_rules', self._update_trans_rules)
         self._opt_lan_ctrl_cfg = user_input.get(
@@ -2023,6 +2057,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self._entry_data['display_binary_mode'] = (
                 self._display_binary_mode_new)
             self._need_reload = True
+        if self._area_sync_enabled_new != self._area_sync_enabled:
+            self._entry_data[CONF_AREA_SYNC_ENABLED] = (
+                self._area_sync_enabled_new)
+            self._need_reload = True
+        if self._area_name_rule_new != self._area_name_rule:
+            self._entry_data['area_name_rule'] = self._area_name_rule_new
+            self._need_reload = True
         # Update display_devices_changed_notify
         self._entry_data['display_devices_changed_notify'] = (
             self._display_devs_notify)
@@ -2041,6 +2082,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         entry_title = (
             f'{self._nick_name_new or self._nick_name}: '
             f'{self._uid} [{CLOUD_SERVERS[self._cloud_server]}]')
+        # Preserve the live ownership ledger if a scheduled sync ran while the
+        # options form was open.
+        if CONF_AREA_SYNC_MANAGED_AREAS in self._config_entry.data:
+            self._entry_data[CONF_AREA_SYNC_MANAGED_AREAS] = (
+                self._config_entry.data[CONF_AREA_SYNC_MANAGED_AREAS])
         # Update entry config
         self.hass.config_entries.async_update_entry(
             self._config_entry, title=entry_title, data=self._entry_data)

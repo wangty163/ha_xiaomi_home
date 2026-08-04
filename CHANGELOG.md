@@ -1,4 +1,12 @@
 # CHANGELOG
+## v0.5.0
+### Added
+- Add an explicit room synchronization switch and area naming rule to the integration configuration UI.
+- Send Home Assistant notifications when synchronization moves devices or creates or deletes areas.
+
+### Changed
+- Track areas created by room synchronization and delete them only after they are no longer required and have no assigned devices or entities. Existing user-created areas are never deleted by this cleanup.
+
 ## v0.4.9
 ### Fixed
 - Keep translation placeholders consistent across all supported languages while satisfying current Home Assistant translation validation.

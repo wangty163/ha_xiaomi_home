@@ -36,6 +36,7 @@
                 "description": "## Tanıtım\r\n### Cihazın Evini İçe Aktar\r\nEntegrasyon, seçilen evden cihazları ekleyecektir.\r\n### Oda Adı Senkronizasyon Modu\r\nMi Home UYGULAMASINDAN Home Assistant'a cihazlar senkronize edilirken, Home Assistant'taki alanın adlandırılması aşağıdaki kurallara uyacaktır. Senkronizasyon işleminin Mi Home UYGULAMASINDAKI ev ve oda ayarlarını değiştirmeyeceğini unutmayın.\r\n- Senkronize etme: Cihaz herhangi bir alana eklenmeyecektir.\r\n- Diğer seçenekler: Cihazın eklendiği alan, Mi Home UYGULAMASINDAKI ev veya oda adına göre adlandırılacaktır.\r\n### Gelişmiş Ayarlar\r\nEntegrasyonun profesyonel yapılandırma seçeneklerini değiştirmek için gelişmiş ayarları gösterin.\r\n\r\n&emsp;\r\n### {nick_name} Merhaba! Lütfen cihaz eklemek istediğiniz evi seçin.",
                 "data": {
                     "home_infos": "Cihazın Evini İçe Aktar",
+                    "area_sync_enabled": "Synchronize rooms to Home Assistant areas",
                     "area_name_rule": "Oda Adı Senkronizasyon Modu",
                     "advanced_options": "Gelişmiş Ayarlar"
                 }
@@ -122,6 +123,8 @@
                     "hide_non_standard_entities": "Standart olmayan oluşturulan varlıkları gizle",
                     "display_binary_mode": "İkili Sensör Görüntüleme Modu",
                     "display_devices_changed_notify": "Cihaz durum değişikliği bildirimlerini göster",
+                    "area_sync_enabled": "Synchronize rooms to Home Assistant areas",
+                    "area_name_rule": "Area naming rule",
                     "update_trans_rules": "Varlık dönüştürme kurallarını güncelle",
                     "update_lan_ctrl_config": "LAN kontrol yapılandırmasını güncelle",
                     "network_detect_config": "Entegre ağ yapılandırması",
