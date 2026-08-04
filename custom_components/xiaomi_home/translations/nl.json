@@ -36,7 +36,7 @@
                 "description": "## Inleiding\r\n### Importeer de familie van het apparaat\r\nDe integratie voegt apparaten toe uit de geselecteerde familie.\r\n### Kamernaam Synchronisatiemodus\r\nBij het synchroniseren van apparaten van de Mi Home-app naar Home Assistant, wordt de naam van het gebied in Home Assistant volgens de volgende regels genoemd. Houd er rekening mee dat het synchronisatieproces de instellingen van familie en kamer in de Mi Home-app niet zal wijzigen.\r\n- Niet synchroniseren: Het apparaat wordt niet aan een gebied toegevoegd.\r\n- Andere opties: Het gebied waaraan het apparaat wordt toegevoegd, wordt genoemd naar de familie- of kamernaam in de Mi Home-app.\r\n### Geavanceerde instellingen\r\nToon geavanceerde instellingen om de professionele configuratie-opties van de integratie te wijzigen.\r\n\r\n&emsp;\r\n### {nick_name} Hallo! Selecteer de familie waaraan u het apparaat wilt toevoegen.",
                 "data": {
                     "home_infos": "Importeer de familie van het apparaat",
-                    "area_sync_enabled": "Synchronize rooms to Home Assistant areas",
+                    "area_sync_enabled": "Synchronize room names and device areas",
                     "area_name_rule": "Kamernaam Synchronisatiemodus",
                     "advanced_options": "Geavanceerde instellingen"
                 }
@@ -123,8 +123,8 @@
                     "hide_non_standard_entities": "Verberg niet-standaard gemaakte entiteiten",
                     "display_binary_mode": "Binaire sensorweergavemodus",
                     "display_devices_changed_notify": "Apparaatstatuswijzigingen weergeven",
-                    "area_sync_enabled": "Synchronize rooms to Home Assistant areas",
-                    "area_name_rule": "Area naming rule",
+                    "area_sync_enabled": "Synchronize room names and device areas",
+                    "area_name_rule": "Room name and device area sync rule",
                     "update_trans_rules": "Werk entiteitsconversieregels bij",
                     "update_lan_ctrl_config": "Werk LAN controleconfiguratie bij",
                     "network_detect_config": "Geïntegreerde Netwerkconfiguratie",

@@ -36,7 +36,7 @@
                 "description": "## 紹介\r\n### デバイスの家族をインポート\r\n統合は選択された家族のデバイスを追加します。\r\n### 部屋の名前の同期モード\r\nMi HomeアプリからHome Assistantにデバイスを同期する際、Home Assistantのエリアの名前は以下のルールに従います。同期プロセスはMi Homeアプリの家族と部屋の設定を変更しないことに注意してください。\r\n- 同期しない：デバイスはどのエリアにも追加されません。\r\n- その他のオプション：デバイスが追加されるエリアはMi Homeアプリの家族または部屋の名前にちなんで命名されます。\r\n### 高度な設定\r\n統合のプロフェッショナルな設定オプションを変更するために高度な設定を表示します。\r\n\r\n&emsp;\r\n### {nick_name} こんにちは！デバイスを追加したい家族を選択してください。",
                 "data": {
                     "home_infos": "デバイスの家族をインポート",
-                    "area_sync_enabled": "Synchronize rooms to Home Assistant areas",
+                    "area_sync_enabled": "Synchronize room names and device areas",
                     "area_name_rule": "部屋の名前の同期モード",
                     "advanced_options": "高度な設定"
                 }
@@ -123,8 +123,8 @@
                     "hide_non_standard_entities": "非標準生成エンティティを非表示にする",
                     "display_binary_mode": "バイナリセンサー表示モード",
                     "display_devices_changed_notify": "デバイスの状態変化通知を表示",
-                    "area_sync_enabled": "Synchronize rooms to Home Assistant areas",
-                    "area_name_rule": "Area naming rule",
+                    "area_sync_enabled": "Synchronize room names and device areas",
+                    "area_name_rule": "Room name and device area sync rule",
                     "update_trans_rules": "エンティティ変換ルールを更新する",
                     "update_lan_ctrl_config": "LAN制御構成を更新する",
                     "network_detect_config": "統合ネットワーク構成",
