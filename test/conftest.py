@@ -37,6 +37,7 @@ def set_logger():
 def load_py_file():
     # Copy py file to test folder
     file_list = [
+        'area.py',
         'common.py',
         'const.py',
         'miot_cloud.py',

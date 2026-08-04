@@ -69,6 +69,10 @@ You can change the configurations in the "Configuration Options" dialog box, in 
 
 Method: [Settings > Devices & services > Configured > Xiaomi Home](https://my.home-assistant.io/redirect/integration/?domain=xiaomi_home) > CONFIGURE > Select the option to update
 
+### Device Area Synchronization
+
+When Room Name Sync Mode is set to Home Name, Room Name, or Home Name and Room Name, the integration keeps existing Home Assistant device areas aligned with the current Xiaomi Home metadata. It refreshes the Xiaomi Home device list at startup and every hour, creates missing Home Assistant areas, and moves imported devices when their Xiaomi Home room changes. Selecting Do not synchronize disables this behavior. Entity-specific area overrides are not changed.
+
 ### Debug Mode for Action
 
 You can manually send Action command message with parameters to the device when the debug mode for action is activated. The user interface for sending the Action command with parameters is shown as a Text entity.
