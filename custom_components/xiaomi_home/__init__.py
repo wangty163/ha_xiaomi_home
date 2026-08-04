@@ -57,7 +57,10 @@ from homeassistant.helpers import (
     area_registry, config_validation as cv, device_registry, entity_registry)
 from homeassistant.helpers.event import async_track_time_interval
 
-from .miot.area import AreaSyncResult, sync_device_area_entries
+from .miot.area import (
+    AREA_SYNC_RULES, CONF_AREA_SYNC_MANAGED_AREAS, AreaSyncResult,
+    area_sync_is_enabled, format_area_sync_notification,
+    sync_device_area_entries)
 from .miot.common import gen_device_area_map, slugify_did
 from .miot.miot_storage import (
     DeviceManufacturer, MIoTStorage, MIoTCert)
@@ -75,9 +78,13 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 def _sync_device_areas(
-    hass: HomeAssistant, miot_client: MIoTClient
+    hass: HomeAssistant, miot_client: MIoTClient, config_entry: ConfigEntry
 ) -> AreaSyncResult:
     """Synchronize imported Xiaomi Home devices to their current areas."""
+    entry_data = dict(config_entry.data)
+    managed_areas = entry_data.get(CONF_AREA_SYNC_MANAGED_AREAS, {})
+    if not isinstance(managed_areas, dict):
+        managed_areas = {}
     device_area_map = gen_device_area_map(
         devices=miot_client.device_list,
         cloud_server=miot_client.cloud_server,
@@ -85,18 +92,40 @@ def _sync_device_areas(
     result = sync_device_area_entries(
         area_registry=area_registry.async_get(hass),
         device_registry=device_registry.async_get(hass),
+        entity_registry=entity_registry.async_get(hass),
         device_area_map=device_area_map,
-        domain=DOMAIN)
+        domain=DOMAIN,
+        managed_areas=managed_areas)
+    managed_areas_new = dict(result.managed_areas)
+    if managed_areas_new != managed_areas:
+        entry_data[CONF_AREA_SYNC_MANAGED_AREAS] = managed_areas_new
+        hass.config_entries.async_update_entry(
+            config_entry, data=entry_data)
     log_message = (
         'device area sync, scanned=%d, matched=%d, updated=%d, '
-        'created_areas=%d, missing_devices=%d')
+        'created_areas=%d, deleted_areas=%d, missing_devices=%d')
     log_args = (
         result.scanned, result.matched, result.updated,
-        result.created_areas, result.missing_devices)
-    if result.updated or result.created_areas:
+        result.created_areas, result.deleted_areas, result.missing_devices)
+    if result.updated or result.created_areas or result.deleted_areas:
         _LOGGER.info(log_message, *log_args)
     else:
         _LOGGER.debug(log_message, *log_args)
+
+    notification = format_area_sync_notification(
+        result=result,
+        language=entry_data.get(
+            'integration_language', DEFAULT_INTEGRATION_LANGUAGE))
+    if notification:
+        title, message = notification
+        notification_id = f'{config_entry.entry_id}.area_sync'
+        persistent_notification.async_dismiss(
+            hass=hass, notification_id=notification_id)
+        persistent_notification.async_create(
+            hass=hass,
+            message=message,
+            title=title,
+            notification_id=notification_id)
     return result
 
 
@@ -270,13 +299,19 @@ async def async_setup_entry(
         await hass.config_entries.async_forward_entry_setups(
             config_entry, SUPPORTED_PLATFORMS)
 
-        if miot_client.area_name_rule in {'home', 'room', 'home_room'}:
+        if (
+            area_sync_is_enabled(entry_data)
+            and miot_client.area_name_rule in AREA_SYNC_RULES
+        ):
             async def async_refresh_and_sync_areas(now=None) -> None:
                 """Refresh Xiaomi Home metadata and synchronize areas."""
                 del now
                 try:
                     await miot_client.refresh_cloud_devices_async()
-                    _sync_device_areas(hass=hass, miot_client=miot_client)
+                    _sync_device_areas(
+                        hass=hass,
+                        miot_client=miot_client,
+                        config_entry=config_entry)
                 except Exception:  # pylint: disable=broad-exception-caught
                     _LOGGER.exception('device area sync failed')
 
