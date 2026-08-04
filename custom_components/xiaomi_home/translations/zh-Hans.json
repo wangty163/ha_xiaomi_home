@@ -33,11 +33,11 @@
             },
             "homes_select": {
                 "title": "选择家庭与设备",
-                "description": "## 使用介绍\r\n### 导入设备的家庭\r\n集成将添加已选中家庭中的设备。\r\n### 将小米家庭房间同步到 Home Assistant 区域\r\n开启后，集成会在启动时及每小时检查一次小米家庭房间信息，并把 Home Assistant 中已有的设备移动到对应区域。同步会按需新增区域；删除时只会删除由本功能自动创建、已经不再需要且没有设备或实体占用的区域。设备被移动或区域被新增、删除时，Home Assistant 会发送通知。此过程不会修改小米家庭中的房间设置。\r\n### 区域命名规则\r\n选择如何使用小米家庭的家庭名、房间名生成 Home Assistant 区域名称。\r\n### 高级设置选项\r\n展示高级设置选项，对集成的专业配置选项进行修改。\r\n\r\n&emsp;\r\n### {nick_name} 您好！请选择您想要添加的设备所处家庭。",
+                "description": "## 使用介绍\r\n### 导入设备的家庭\r\n集成将添加已选中家庭中的设备。\r\n### 同步房间名称和设备区域\r\n开启后，集成会在启动时及每小时检查一次小米家庭房间信息，使用家庭名、房间名生成 Home Assistant 区域名称，并把 Home Assistant 中已有的设备移动到对应区域。同步会按需新增区域；删除时只会删除由本功能自动创建、已经不再需要且没有设备或实体占用的区域。设备被移动或区域被新增、删除时，Home Assistant 会发送通知。此过程不会修改小米家庭中的房间设置。\r\n### 房间名称与设备区域同步规则\r\n选择如何使用小米家庭的家庭名、房间名生成 Home Assistant 区域名称及设备区域归属。\r\n### 高级设置选项\r\n展示高级设置选项，对集成的专业配置选项进行修改。\r\n\r\n&emsp;\r\n### {nick_name} 您好！请选择您想要添加的设备所处家庭。",
                 "data": {
                     "home_infos": "导入设备的家庭",
-                    "area_sync_enabled": "将房间同步到 Home Assistant 区域",
-                    "area_name_rule": "房间名同步模式",
+                    "area_sync_enabled": "同步房间名称和设备区域",
+                    "area_name_rule": "房间名称与设备区域同步规则",
                     "advanced_options": "高级设置选项"
                 }
             },
@@ -114,7 +114,7 @@
             },
             "config_options": {
                 "title": "配置选项",
-                "description": "### {nick_name} 您好！\r\n\r\n小米账号ID：{uid}\r\n当前登录区域：{cloud_server}\r\n集成实例ID：{instance_id}\r\n\r\n房间同步会在集成启动时及每小时检查一次小米家庭。设备被移动，或由本功能管理的区域被新增、安全删除时，Home Assistant 会发送通知。\r\n\r\n请设置需要修改的选项，然后点击“下一步”。",
+                "description": "### {nick_name} 您好！\r\n\r\n小米账号ID：{uid}\r\n当前登录区域：{cloud_server}\r\n集成实例ID：{instance_id}\r\n\r\n房间名称和设备区域同步会在集成启动时及每小时检查一次小米家庭，生成 Home Assistant 区域名称并同步设备的区域归属。设备被移动，或由本功能管理的区域被新增、安全删除时，Home Assistant 会发送通知。\r\n\r\n请设置需要修改的选项，然后点击“下一步”。",
                 "data": {
                     "integration_language": "集成语言",
                     "update_user_info": "更新用户信息",
@@ -123,8 +123,8 @@
                     "hide_non_standard_entities": "隐藏非标准生成实体",
                     "display_binary_mode": "二进制传感器显示模式",
                     "display_devices_changed_notify": "显示设备状态变化通知",
-                    "area_sync_enabled": "将房间同步到 Home Assistant 区域",
-                    "area_name_rule": "区域命名规则",
+                    "area_sync_enabled": "同步房间名称和设备区域",
+                    "area_name_rule": "房间名称与设备区域同步规则",
                     "update_trans_rules": "更新实体转换规则",
                     "update_lan_ctrl_config": "更新局域网控制配置",
                     "network_detect_config": "集成网络配置",

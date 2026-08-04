@@ -1,4 +1,11 @@
 # CHANGELOG
+## v0.5.1
+### Changed
+- Clarify throughout the configuration UI and notifications that synchronization covers both Home Assistant area names and device area assignments.
+
+### Fixed
+- Provide explicit translated labels for the room name and device area synchronization controls instead of exposing the internal `area_name_rule` key.
+
 ## v0.5.0
 ### Added
 - Add an explicit room synchronization switch and area naming rule to the integration configuration UI.
