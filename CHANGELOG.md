@@ -1,4 +1,8 @@
 # CHANGELOG
+## v0.5.3
+### Fixed
+- Use a dedicated UI-only field for the synchronization logic so the legacy internal storage key `area_name_rule` is never shown as the field label.
+
 ## v0.5.2
 ### Changed
 - Show the room name and device area synchronization rule only after synchronization is enabled; disabling synchronization skips the rule step entirely.

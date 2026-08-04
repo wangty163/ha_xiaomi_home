@@ -345,7 +345,9 @@ def test_area_sync_control_labels_describe_both_effects():
             'area_sync_rule']['data']
         assert setup_data['area_sync_enabled'] == labels[0]
         assert options_data['area_sync_enabled'] == labels[0]
-        assert setup_rule_data['area_name_rule'] == labels[1]
-        assert options_rule_data['area_name_rule'] == labels[1]
+        assert setup_rule_data['area_sync_rule'] == labels[1]
+        assert options_rule_data['area_sync_rule'] == labels[1]
+        assert 'area_name_rule' not in setup_rule_data
+        assert 'area_name_rule' not in options_rule_data
         assert 'area_name_rule' not in setup_data
         assert 'area_name_rule' not in options_data
