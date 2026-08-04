@@ -14,7 +14,7 @@ Xiaomi Home Integration is an official Home Assistant integration for controllin
 ./install.sh /path/to/config
 
 # Install test dependencies
-pip install pytest pytest-asyncio pytest-dependency zeroconf paho.mqtt psutil cryptography slugify
+pip install pytest pytest-asyncio pytest-dependency zeroconf paho.mqtt psutil cryptography python-slugify
 ```
 
 ### Testing

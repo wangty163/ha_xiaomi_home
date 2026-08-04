@@ -71,6 +71,7 @@ from .miot.miot_client import MIoTClient, get_miot_instance_async
 
 _LOGGER = logging.getLogger(__name__)
 AREA_SYNC_INTERVAL = timedelta(hours=1)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 def _sync_device_areas(
