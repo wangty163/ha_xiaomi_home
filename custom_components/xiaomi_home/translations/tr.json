@@ -44,7 +44,7 @@
                 "title": "Choose synchronization logic",
                 "description": "Synchronization is enabled. Select how Home Assistant area names and device area assignments are generated from Xiaomi Home home and room names.",
                 "data": {
-                    "area_name_rule": "Synchronization logic"
+                    "area_sync_rule": "Synchronization logic"
                 }
             },
             "advanced_options": {
@@ -140,7 +140,7 @@
                 "title": "Choose synchronization logic",
                 "description": "Synchronization is enabled. Select how Home Assistant area names and device area assignments are generated from Xiaomi Home home and room names.",
                 "data": {
-                    "area_name_rule": "Synchronization logic"
+                    "area_sync_rule": "Synchronization logic"
                 }
             },
             "update_user_info": {

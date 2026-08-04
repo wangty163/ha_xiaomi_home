@@ -44,7 +44,7 @@
                 "title": "选择同步逻辑",
                 "description": "已开启房间名称和设备区域同步。请选择如何使用小米家庭的家庭名、房间名生成 Home Assistant 区域名称及设备区域归属。",
                 "data": {
-                    "area_name_rule": "同步逻辑"
+                    "area_sync_rule": "同步逻辑"
                 }
             },
             "advanced_options": {
@@ -140,7 +140,7 @@
                 "title": "选择同步逻辑",
                 "description": "已开启房间名称和设备区域同步。请选择如何使用小米家庭的家庭名、房间名生成 Home Assistant 区域名称及设备区域归属。",
                 "data": {
-                    "area_name_rule": "同步逻辑"
+                    "area_sync_rule": "同步逻辑"
                 }
             },
             "update_user_info": {

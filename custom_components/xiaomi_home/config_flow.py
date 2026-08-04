@@ -107,6 +107,7 @@ from .miot.miot_spec import MIoTSpecParser
 from .miot.miot_lan import MIoTLan
 
 _LOGGER = logging.getLogger(__name__)
+AREA_SYNC_RULE_FORM_FIELD = 'area_sync_rule'
 
 
 class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -753,7 +754,7 @@ class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Select the synchronization rule only after sync is enabled."""
         if user_input:
             self._area_name_rule = user_input.get(
-                'area_name_rule', self.DEFAULT_AREA_NAME_RULE)
+                AREA_SYNC_RULE_FORM_FIELD, self.DEFAULT_AREA_NAME_RULE)
             if self._show_advanced_options:
                 return await self.async_step_advanced_options()
             return await self.config_flow_done()
@@ -761,7 +762,7 @@ class XiaomiMihomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id='area_sync_rule',
             data_schema=vol.Schema({
                 vol.Required(
-                    'area_name_rule',
+                    AREA_SYNC_RULE_FORM_FIELD,
                     default=self._area_name_rule  # type: ignore
                 ): vol.In(area_sync_rule_options(
                     self._miot_i18n.translate(
@@ -1459,13 +1460,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Select the synchronization rule only after sync is enabled."""
         if user_input:
             self._area_name_rule_new = user_input.get(
-                'area_name_rule', self._area_name_rule)
+                AREA_SYNC_RULE_FORM_FIELD, self._area_name_rule)
             return await self.async_step_update_user_info()
         return self.async_show_form(
             step_id='area_sync_rule',
             data_schema=vol.Schema({
                 vol.Required(
-                    'area_name_rule',
+                    AREA_SYNC_RULE_FORM_FIELD,
                     default=self._area_name_rule  # type: ignore
                 ): vol.In(area_sync_rule_options(
                     self._miot_i18n.translate(
