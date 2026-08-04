@@ -165,6 +165,7 @@ class MIoTClient:
     _refresh_token_timer: Optional[asyncio.TimerHandle]
     _refresh_cert_timer: Optional[asyncio.TimerHandle]
     _refresh_cloud_devices_timer: Optional[asyncio.TimerHandle]
+    _refresh_cloud_devices_lock: asyncio.Lock
     # Refresh prop
     _refresh_props_list: dict[str, dict]
     _refresh_props_timer: Optional[asyncio.TimerHandle]
@@ -235,6 +236,7 @@ class MIoTClient:
         self._refresh_token_timer = None
         self._refresh_cert_timer = None
         self._refresh_cloud_devices_timer = None
+        self._refresh_cloud_devices_lock = asyncio.Lock()
 
         # Refresh prop
         self._refresh_props_list = {}
@@ -523,6 +525,13 @@ class MIoTClient:
     @property
     def device_list(self) -> dict:
         return self._device_list_cache
+
+    async def refresh_cloud_devices_async(self) -> bool:
+        """Refresh the cached device list from Xiaomi Cloud."""
+        if not self._network.network_status:
+            return False
+        async with self._refresh_cloud_devices_lock:
+            return await self.__refresh_cloud_devices_async()
 
     @property
     def persistent_notify(self) -> Callable:
@@ -1444,7 +1453,7 @@ class MIoTClient:
             _LOGGER.error('save device list to cache failed')
 
     @final
-    async def __refresh_cloud_devices_async(self) -> None:
+    async def __refresh_cloud_devices_async(self) -> bool:
         _LOGGER.debug(
             'refresh cloud devices, %s, %s', self._uid, self._cloud_server)
         if self._refresh_cloud_devices_timer:
@@ -1458,14 +1467,14 @@ class MIoTClient:
             self._refresh_cloud_devices_timer = self._main_loop.call_later(
                 REFRESH_CLOUD_DEVICES_RETRY_DELAY,
                 lambda: self._main_loop.create_task(
-                    self.__refresh_cloud_devices_async()))
-            return
-        if not result and 'devices' not in result:
+                    self.refresh_cloud_devices_async()))
+            return False
+        if not result or 'devices' not in result:
             self.__show_client_error_notify(
                 message=self._i18n.translate(
                     'miot.client.device_cloud_error'),  # type: ignore
                 notify_key='device_cloud')
-            return
+            return False
         else:
             self.__show_client_error_notify(
                 message=None, notify_key='device_cloud')
@@ -1487,6 +1496,7 @@ class MIoTClient:
             })
 
         self.__request_show_devices_changed_notify()
+        return True
 
     @final
     async def __refresh_cloud_device_with_dids_async(
@@ -1510,7 +1520,7 @@ class MIoTClient:
             self._refresh_cloud_devices_timer.cancel()
         self._refresh_cloud_devices_timer = self._main_loop.call_later(
             delay_sec, lambda: self._main_loop.create_task(
-                self.__refresh_cloud_devices_async()))
+                self.refresh_cloud_devices_async()))
 
     @final
     async def __update_devices_from_gw_async(

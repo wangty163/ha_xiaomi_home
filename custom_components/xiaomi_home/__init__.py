@@ -46,15 +46,19 @@ off Xiaomi or its affiliates' products.
 The Xiaomi Home integration Init File.
 """
 from __future__ import annotations
+from datetime import timedelta
 import logging
 from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.components import persistent_notification
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import (
+    area_registry, device_registry, entity_registry)
+from homeassistant.helpers.event import async_track_time_interval
 
-from .miot.common import slugify_did
+from .miot.area import AreaSyncResult, sync_device_area_entries
+from .miot.common import gen_device_area_map, slugify_did
 from .miot.miot_storage import (
     DeviceManufacturer, MIoTStorage, MIoTCert)
 from .miot.miot_spec import (
@@ -66,6 +70,33 @@ from .miot.miot_device import MIoTDevice
 from .miot.miot_client import MIoTClient, get_miot_instance_async
 
 _LOGGER = logging.getLogger(__name__)
+AREA_SYNC_INTERVAL = timedelta(hours=1)
+
+
+def _sync_device_areas(
+    hass: HomeAssistant, miot_client: MIoTClient
+) -> AreaSyncResult:
+    """Synchronize imported Xiaomi Home devices to their current areas."""
+    device_area_map = gen_device_area_map(
+        devices=miot_client.device_list,
+        cloud_server=miot_client.cloud_server,
+        area_name_rule=miot_client.area_name_rule)
+    result = sync_device_area_entries(
+        area_registry=area_registry.async_get(hass),
+        device_registry=device_registry.async_get(hass),
+        device_area_map=device_area_map,
+        domain=DOMAIN)
+    log_message = (
+        'device area sync, scanned=%d, matched=%d, updated=%d, '
+        'created_areas=%d, missing_devices=%d')
+    log_args = (
+        result.scanned, result.matched, result.updated,
+        result.created_areas, result.missing_devices)
+    if result.updated or result.created_areas:
+        _LOGGER.info(log_message, *log_args)
+    else:
+        _LOGGER.debug(log_message, *log_args)
+    return result
 
 
 async def async_setup(hass: HomeAssistant, hass_config: dict) -> bool:
@@ -237,6 +268,22 @@ async def async_setup_entry(
         hass.data[DOMAIN]['devices'][config_entry.entry_id] = miot_devices
         await hass.config_entries.async_forward_entry_setups(
             config_entry, SUPPORTED_PLATFORMS)
+
+        if miot_client.area_name_rule in {'home', 'room', 'home_room'}:
+            async def async_refresh_and_sync_areas(now=None) -> None:
+                """Refresh Xiaomi Home metadata and synchronize areas."""
+                del now
+                try:
+                    await miot_client.refresh_cloud_devices_async()
+                    _sync_device_areas(hass=hass, miot_client=miot_client)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    _LOGGER.exception('device area sync failed')
+
+            await async_refresh_and_sync_areas()
+            config_entry.async_on_unload(async_track_time_interval(
+                hass=hass,
+                action=async_refresh_and_sync_areas,
+                interval=AREA_SYNC_INTERVAL))
 
         # Remove the deleted devices
         devices_remove = (await miot_client.miot_storage.load_user_config_async(

@@ -103,6 +103,38 @@ def slugify_did(cloud_server: str, did: str) -> str:
     return slugify(f'{cloud_server}_{did}', separator='_')
 
 
+def gen_device_area_name(
+    device_info: dict, area_name_rule: Optional[str]
+) -> Optional[str]:
+    """Generate the Home Assistant area name for a Xiaomi Home device."""
+    home_name = str(device_info.get('home_name') or '').strip()
+    room_name = str(device_info.get('room_name') or '').strip()
+    if area_name_rule == 'home_room':
+        return f'{home_name} {room_name}'.strip() or None
+    if area_name_rule == 'home':
+        return home_name or None
+    if area_name_rule == 'room':
+        return room_name or None
+    return None
+
+
+def gen_device_area_map(
+    devices: dict[str, dict], cloud_server: str,
+    area_name_rule: Optional[str]
+) -> dict[str, str]:
+    """Map Xiaomi Home device registry identifiers to target area names."""
+    result: dict[str, str] = {}
+    for did, info in devices.items():
+        area_name = gen_device_area_name(
+            device_info=info, area_name_rule=area_name_rule)
+        if not area_name:
+            continue
+        result[slugify_did(
+            cloud_server=cloud_server,
+            did=str(info.get('did') or did))] = area_name
+    return result
+
+
 class MIoTMatcher(MQTTMatcher):
     """MIoT Pub/Sub topic matcher."""
 
