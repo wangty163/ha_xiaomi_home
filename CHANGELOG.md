@@ -1,4 +1,9 @@
 # CHANGELOG
+## v0.5.2
+### Changed
+- Show the room name and device area synchronization rule only after synchronization is enabled; disabling synchronization skips the rule step entirely.
+- Remove the legacy "Do not synchronize" value from the synchronization rule choices because the dedicated switch now controls whether synchronization runs.
+
 ## v0.5.1
 ### Changed
 - Clarify throughout the configuration UI and notifications that synchronization covers both Home Assistant area names and device area assignments.

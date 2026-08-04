@@ -71,7 +71,7 @@ Method: [Settings > Devices & services > Configured > Xiaomi Home](https://my.ho
 
 ### Device Area Synchronization
 
-When room name and device area synchronization is enabled, the selected rule determines how Home Assistant area names are generated from Xiaomi Home home and room names. The integration refreshes the Xiaomi Home device list at startup and every hour, creates missing Home Assistant areas, and moves imported devices when their Xiaomi Home room changes. Disabling synchronization keeps Home Assistant area names and device area assignments untouched. Entity-specific area overrides are not changed.
+The configuration page first asks whether room name and device area synchronization is enabled. When enabled, the next step selects how Home Assistant area names are generated from Xiaomi Home home and room names; when disabled, the rule step is skipped. The integration refreshes the Xiaomi Home device list at startup and every hour, creates missing Home Assistant areas, and moves imported devices when their Xiaomi Home room changes. Disabling synchronization keeps Home Assistant area names and device area assignments untouched. Entity-specific area overrides are not changed.
 
 ### Debug Mode for Action
 
