@@ -284,7 +284,7 @@ def test_format_area_sync_notification_in_chinese():
 
     assert notification is not None
     title, message = notification
-    assert title == 'Xiaomi Home 房间同步'
+    assert title == 'Xiaomi Home 房间名称和设备区域同步'
     assert '空气净化器：客厅 → 书房' in message
     assert '**新增区域（1）**' in message
     assert '**删除区域（1）**' in message
@@ -296,3 +296,34 @@ def test_format_area_sync_notification_skips_noop():
 
     assert format_area_sync_notification(
         AreaSyncResult(matched=3), 'en') is None
+
+
+@pytest.mark.github
+def test_area_sync_control_labels_describe_both_effects():
+    """Keep internal option keys from leaking into the configuration UI."""
+    import json
+    from pathlib import Path
+
+    translation_dir = (
+        Path(__file__).resolve().parents[1]
+        / 'custom_components/xiaomi_home/translations')
+    expected = {
+        'en': (
+            'Synchronize room names and device areas',
+            'Room name and device area sync rule'),
+        'zh-Hans': (
+            '同步房间名称和设备区域',
+            '房间名称与设备区域同步规则'),
+    }
+
+    for language, labels in expected.items():
+        translation = json.loads(
+            (translation_dir / f'{language}.json').read_text(
+                encoding='utf-8'))
+        setup_data = translation['config']['step']['homes_select']['data']
+        options_data = translation['options']['step'][
+            'config_options']['data']
+        assert (setup_data['area_sync_enabled'],
+                setup_data['area_name_rule']) == labels
+        assert (options_data['area_sync_enabled'],
+                options_data['area_name_rule']) == labels

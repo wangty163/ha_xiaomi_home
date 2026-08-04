@@ -36,7 +36,7 @@
                 "description": "## Introduzione\r\n### Importa la Famiglia del Dispositivo\r\nL'integrazione aggiungerà i dispositivi dalla famiglia selezionata.\r\n### Modalità di Sincronizzazione del Nome della Stanza\r\nQuando si sincronizzano i dispositivi dall'app Mi Home a Home Assistant, la denominazione dell'area in Home Assistant seguirà le regole indicate di seguito. Si noti che il processo di sincronizzazione non modificherà le impostazioni di famiglia e stanza nell'app Mi Home.\r\n- Non sincronizzare: Il dispositivo non verrà aggiunto a nessuna area.\r\n- Altre opzioni: L'area a cui viene aggiunto il dispositivo verrà denominata come la famiglia o il nome della stanza nell'app Mi Home.\r\n### Impostazioni Avanzate\r\nMostra le impostazioni avanzate per modificare le opzioni di configurazione professionale dell'integrazione.\r\n\r\n&emsp;\r\n### {nick_name} Ciao! Seleziona la famiglia a cui desideri aggiungere il dispositivo.",
                 "data": {
                     "home_infos": "Importa la Famiglia del Dispositivo",
-                    "area_sync_enabled": "Synchronize rooms to Home Assistant areas",
+                    "area_sync_enabled": "Synchronize room names and device areas",
                     "area_name_rule": "Modalità di Sincronizzazione del Nome della Stanza",
                     "advanced_options": "Impostazioni Avanzate"
                 }
@@ -123,8 +123,8 @@
                     "hide_non_standard_entities": "Nascondi entità create non standard",
                     "display_binary_mode": "Modalità di visualizzazione del sensore binario",
                     "display_devices_changed_notify": "Mostra notifiche di cambio stato del dispositivo",
-                    "area_sync_enabled": "Synchronize rooms to Home Assistant areas",
-                    "area_name_rule": "Area naming rule",
+                    "area_sync_enabled": "Synchronize room names and device areas",
+                    "area_name_rule": "Room name and device area sync rule",
                     "update_trans_rules": "Aggiorna le regole di conversione delle entità",
                     "update_lan_ctrl_config": "Aggiorna configurazione del controllo LAN",
                     "network_detect_config": "Configurazione di Rete Integrata",

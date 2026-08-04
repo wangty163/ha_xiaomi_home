@@ -164,8 +164,8 @@ def format_area_sync_notification(
 
     is_chinese = language.lower().startswith('zh')
     if is_chinese:
-        title = 'Xiaomi Home 房间同步'
-        lines = ['已完成房间同步：']
+        title = 'Xiaomi Home 房间名称和设备区域同步'
+        lines = ['已完成房间名称和设备区域同步：']
         if result.device_changes:
             lines.append(f'\n**自动调整设备区域（{result.updated}）**')
             for change in result.device_changes:
@@ -181,8 +181,8 @@ def format_area_sync_notification(
             lines.extend(f'- {name}' for name in result.deleted_area_names)
         return title, '\n'.join(lines)
 
-    title = 'Xiaomi Home room synchronization'
-    lines = ['Room synchronization completed:']
+    title = 'Xiaomi Home room name and device area synchronization'
+    lines = ['Room name and device area synchronization completed:']
     if result.device_changes:
         lines.append(f'\n**Devices moved ({result.updated})**')
         for change in result.device_changes:
