@@ -90,7 +90,7 @@ from .specs.specv2entity import (
     SPEC_PROP_TRANS_MAP,
     SPEC_SERVICE_TRANS_MAP
 )
-from .common import slugify_name, slugify_did
+from .common import gen_device_area_name, slugify_name, slugify_did
 from .const import DOMAIN
 from .miot_client import MIoTClient
 from .miot_error import MIoTClientError, MIoTDeviceError
@@ -183,16 +183,9 @@ class MIoTDevice:
         self._home_name = device_info.get('home_name', None)
         self._room_id = device_info.get('room_id', None)
         self._room_name = device_info.get('room_name', None)
-        match self.miot_client.area_name_rule:
-            case 'home_room':
-                self._suggested_area = (
-                    f'{self._home_name} {self._room_name}'.strip())
-            case 'home':
-                self._suggested_area = self._home_name.strip()
-            case 'room':
-                self._suggested_area = self._room_name.strip()
-            case _:
-                self._suggested_area = None
+        self._suggested_area = gen_device_area_name(
+            device_info=device_info,
+            area_name_rule=self.miot_client.area_name_rule)
 
         self._sub_id = 0
         self._device_state_sub_list = {}
