@@ -128,7 +128,6 @@ def _sync_device_areas(
             notification_id=notification_id)
     return result
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, hass_config: dict) -> bool:

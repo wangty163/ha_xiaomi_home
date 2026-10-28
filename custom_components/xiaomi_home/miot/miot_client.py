@@ -85,6 +85,11 @@ REFRESH_CLOUD_DEVICES_DELAY = 6
 REFRESH_CLOUD_DEVICES_RETRY_DELAY = 60
 REFRESH_GATEWAY_DEVICES_DELAY = 3
 
+# The M30 Pro exposes its Wi-Fi lithium battery through the cloud, but its
+# gateway route only covers part of the device. Keep this readable/notifiable
+# property on its authoritative source without changing other data or events.
+CLOUD_PROPERTY_OVERRIDES = {'xiaomi.lock.s20pro': ((9, 1),)}
+
 @dataclass
 class MIoTClientSub:
     """MIoT client subscription."""
@@ -751,13 +756,16 @@ class MIoTClient:
             if self._network.network_status:
                 result = await self._http.get_prop_async(
                     did=did, siid=siid, piid=piid)
-                if result:
+                # Zero and False are valid MIoT values (for example, stop).
+                if result is not None:
                     return result
         except Exception as err:  # pylint: disable=broad-exception-caught
             # Catch all exceptions
             _LOGGER.error(
                 'client get prop from cloud error, %s, %s',
                 err, traceback.format_exc())
+        if (siid, piid) in self.__cloud_property_overrides(did):
+            return None
         if self._ctrl_mode == CtrlMode.AUTO:
             # Central hub gateway
             device_gw = self._device_list_gateway.get(did, None)
@@ -857,6 +865,7 @@ class MIoTClient:
             f'{"#" if siid is None or piid is None else f"{siid}/{piid}"}')
         self._sub_tree[topic] = MIoTClientSub(
             topic=topic, handler=handler, handler_ctx=handler_ctx)
+        self.__sync_cloud_property_subscriptions(did)
         _LOGGER.debug('client sub prop, %s', topic)
         return True
 
@@ -868,8 +877,30 @@ class MIoTClient:
             f'{"#" if siid is None or piid is None else f"{siid}/{piid}"}')
         if self._sub_tree.get(topic=topic):
             del self._sub_tree[topic]
+        self.__sync_cloud_property_subscriptions(did)
         _LOGGER.debug('client unsub prop, %s', topic)
         return True
+
+    @final
+    def __cloud_property_overrides(self, did: str) -> tuple:
+        model = self._device_list_cache.get(did, {}).get('model')
+        return CLOUD_PROPERTY_OVERRIDES.get(model, ())
+
+    @final
+    def __sync_cloud_property_subscriptions(self, did: str) -> list[tuple]:
+        active = []
+        connected = self._mips_cloud.mips_state
+        for siid, piid in self.__cloud_property_overrides(did):
+            if self._sub_tree.get(topic=f'{did}/p/{siid}/{piid}'):
+                active.append((siid, piid))
+                if not connected:
+                    continue
+                self._mips_cloud.sub_prop(
+                    did=did, siid=siid, piid=piid,
+                    handler=self.__on_prop_msg)
+            elif connected:
+                self._mips_cloud.unsub_prop(did=did, siid=siid, piid=piid)
+        return active
 
     def sub_event(
         self, did: str, handler: Callable[[dict, Any], None],
@@ -917,6 +948,8 @@ class MIoTClient:
     async def remove_device_async(self, did: str) -> None:
         if did not in self._device_list_cache:
             return
+        for siid, piid in self.__cloud_property_overrides(did):
+            self.unsub_prop(did=did, siid=siid, piid=piid)
         sub_from = self._sub_source_list.pop(did, None)
         # Unsub
         if sub_from:
@@ -998,7 +1031,7 @@ class MIoTClient:
         elif sub_from in self._mips_local:
             mips = self._mips_local[sub_from]
         if mips is not None:
-            mips.sub_prop(did=did, handler=self.__on_prop_msg)
+            mips.sub_prop(did=did, handler=self.__on_default_prop_msg)
             mips.sub_event(did=did, handler=self.__on_event_msg)
 
     @final
@@ -1113,6 +1146,8 @@ class MIoTClient:
             for did in list(self._device_list_cache.keys()):
                 self._mips_cloud.sub_device_state(
                     did=did, handler=self.__on_cloud_device_state_changed)
+                for siid, piid in self.__sync_cloud_property_subscriptions(did):
+                    self.request_refresh_prop(did=did, siid=siid, piid=piid)
         else:
             # Disconnect
             for did, info in self._device_list_cloud.items():
@@ -1327,6 +1362,19 @@ class MIoTClient:
                 did, MIoTDeviceState.ONLINE if state_new
                 else MIoTDeviceState.OFFLINE, sub.handler_ctx)
         self.__request_show_devices_changed_notify()
+
+    @final
+    def __on_default_prop_msg(self, params: dict, ctx: Any) -> None:
+        did, siid, piid = (
+            params.get('did'), params.get('siid'), params.get('piid'))
+        if (
+            (siid, piid) in self.__cloud_property_overrides(did)
+            and self._sub_tree.get(topic=f'{did}/p/{siid}/{piid}')
+        ):
+            # Only the precise cloud subscription owns this property. This
+            # also prevents cloud wildcard/exact matches from dispatching twice.
+            return
+        self.__on_prop_msg(params, ctx)
 
     @final
     def __on_prop_msg(self, params: dict, ctx: Any) -> None:
@@ -1697,7 +1745,8 @@ class MIoTClient:
                 _LOGGER.info(
                     'refresh props failed, cloud, %s',
                     list(request_list.keys()))
-                request_list = None
+                self._refresh_props_list.update(request_list)
+                return False
             return True
         except Exception as err:  # pylint:disable=broad-exception-caught
             _LOGGER.error(
@@ -1718,6 +1767,12 @@ class MIoTClient:
             if did in request_list:
                 # NOTICE: A device only requests once a cycle, continuous
                 # acquisition of properties can cause device exceptions.
+                continue
+            pending = self._refresh_props_list[key]
+            if (
+                (pending['siid'], pending['piid'])
+                in self.__cloud_property_overrides(did)
+            ):
                 continue
             params = self._refresh_props_list.pop(key)
             device_gw = self._device_list_gateway.get(did, None)
@@ -1767,6 +1822,12 @@ class MIoTClient:
             if did in request_list:
                 # NOTICE: A device only requests once a cycle, continuous
                 # acquisition of properties can cause device exceptions.
+                continue
+            pending = self._refresh_props_list[key]
+            if (
+                (pending['siid'], pending['piid'])
+                in self.__cloud_property_overrides(did)
+            ):
                 continue
             params = self._refresh_props_list.pop(key)
             if did not in self._device_list_lan:

@@ -47,6 +47,7 @@ Media player entities for Xiaomi Home.
 """
 from __future__ import annotations
 import logging
+from datetime import datetime, timezone
 from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
@@ -182,6 +183,9 @@ class FeaturePlay(MIoTServiceEntity, MediaPlayerEntity):
 
     async def async_media_play(self) -> None:
         """Send play command."""
+        invalidate = getattr(self, '_invalidate_playback_state', None)
+        if invalidate:
+            invalidate()
         await self.action_async(action=self._action_play)
 
 
@@ -204,6 +208,9 @@ class FeaturePause(MIoTServiceEntity, MediaPlayerEntity):
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
+        invalidate = getattr(self, '_invalidate_playback_state', None)
+        if invalidate:
+            invalidate()
         await self.action_async(action=self._action_pause)
 
 
@@ -225,6 +232,9 @@ class FeatureStop(MIoTServiceEntity, MediaPlayerEntity):
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
+        invalidate = getattr(self, '_invalidate_playback_state', None)
+        if invalidate:
+            invalidate()
         await self.action_async(action=self._action_stop)
 
 
@@ -247,6 +257,9 @@ class FeatureNextTrack(MIoTServiceEntity, MediaPlayerEntity):
 
     async def async_media_next_track(self) -> None:
         """Send next track command."""
+        invalidate = getattr(self, '_invalidate_playback_state', None)
+        if invalidate:
+            invalidate()
         await self.action_async(action=self._action_next)
 
 
@@ -269,6 +282,9 @@ class FeaturePreviousTrack(MIoTServiceEntity, MediaPlayerEntity):
 
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
+        invalidate = getattr(self, '_invalidate_playback_state', None)
+        if invalidate:
+            invalidate()
         await self.action_async(action=self._action_previous)
 
 
@@ -402,12 +418,16 @@ class FeatureState(MIoTServiceEntity, MediaPlayerEntity):
     """States feature of the media player entity."""
     _prop_playing_state: Optional[MIoTSpecProperty]
     _playing_state_map: Optional[dict[int, str]]
+    _playback_state_fresh: bool
+    _playback_state_refreshed_at: Optional[str]
 
     def __init__(self, miot_device: MIoTDevice,
                  entity_data: MIoTEntityData) -> None:
         """Initialize the feature class."""
         self._prop_playing_state = None
         self._playing_state_map = None
+        self._playback_state_fresh = False
+        self._playback_state_refreshed_at = None
 
         super().__init__(miot_device=miot_device, entity_data=entity_data)
         # properties
@@ -431,15 +451,76 @@ class FeatureState(MIoTServiceEntity, MediaPlayerEntity):
                         self._playing_state_map[
                             item.value] = MediaPlayerState.PAUSED
                 self._prop_playing_state = prop
+                self.sub_prop_changed(
+                    prop, self._handle_playing_state_changed)
+
+    async def async_added_to_hass(self) -> None:
+        """Register subscriptions, then establish an initial fresh state."""
+        await super().async_added_to_hass()
+        try:
+            await self.async_update()
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            # Keep the entity registered but visibly unknown when the device
+            # cannot be read; a later push or explicit update can recover it.
+            _LOGGER.warning(
+                'initial playing-state refresh failed, %s, %s',
+                self.entity_id, type(err).__name__)
+
+    def _mark_playback_state_fresh(self) -> None:
+        """Record a playing-state read after the last transport action."""
+        self._playback_state_fresh = True
+        self._playback_state_refreshed_at = datetime.now(
+            timezone.utc).isoformat()
+
+    def _invalidate_playback_state(self) -> None:
+        """Reject cached playing-state until a new device read succeeds."""
+        self._playback_state_fresh = False
+        self.async_write_ha_state()
+
+    def _handle_playing_state_changed(
+        self, prop: MIoTSpecProperty, value: object
+    ) -> None:
+        """Accept a pushed playing-state value as fresh device evidence."""
+        del prop, value
+        self._mark_playback_state_fresh()
+
+    async def async_update(self) -> None:
+        """Force a playing-state read for homeassistant.update_entity."""
+        if self._prop_playing_state is None:
+            raise RuntimeError(
+                f'playing-state property is unavailable, {self.entity_id}')
+        self._invalidate_playback_state()
+        if self.get_prop_value(self._prop_playing_state) is None:
+            # Xiaomi Home's helper compares against this map with [] instead
+            # of get(); seed it when startup has not delivered an initial push.
+            self.set_prop_value(self._prop_playing_state, None)
+        value = await self.get_property_async(self._prop_playing_state)
+        if value is None:
+            raise RuntimeError(
+                f'playing-state refresh returned no value, {self.entity_id}')
+        self._mark_playback_state_fresh()
+        self.async_write_ha_state()
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Expose whether the media state came from a post-action read."""
+        attrs = dict(super().extra_state_attributes or {})
+        attrs['playback_state_fresh'] = self._playback_state_fresh
+        attrs['playback_state_refreshed_at'] = (
+            self._playback_state_refreshed_at)
+        return attrs
 
     @property
     def state(self) -> Optional[MediaPlayerState]:
         """The current state."""
+        if not self._playback_state_fresh:
+            return None
         current_state = self.get_prop_value(
             prop=self._prop_playing_state) if self._prop_playing_state else None
-        return (MediaPlayerState.ON if
-                (current_state is None) else self.get_map_value(
-                    map_=self._playing_state_map, key=current_state))
+        if current_state is None:
+            return None
+        return self.get_map_value(
+            map_=self._playing_state_map, key=current_state)
 
 
 class WifiSpeaker(FeatureVolumeSet, FeatureVolumeMute, FeaturePlay,
