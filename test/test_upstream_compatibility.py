@@ -137,6 +137,35 @@ def translation_strings(value):
             yield from translation_strings(child)
 
 
+def translation_placeholders(value, prefix=()):
+    """Index placeholder sets by the exact localized string path."""
+    if isinstance(value, str):
+        return {prefix: set(re.findall(r'{([a-zA-Z_]\w*)}', value))}
+    result = {}
+    for key, child in value.items():
+        result.update(translation_placeholders(child, (*prefix, key)))
+    return result
+
+
+@pytest.mark.parametrize('translation_file', sorted(
+    (COMPONENT / 'translations').glob('*.json')), ids=lambda path: path.stem)
+def test_localized_placeholders_match_english_baseline(translation_file):
+    # Home Assistant validates each localized string against English before
+    # config-flow description_placeholders are ever used for interpolation.
+    baseline = translation_placeholders(json.loads(
+        (COMPONENT / 'translations/en.json').read_text(encoding='utf-8')))
+    localized = translation_placeholders(json.loads(
+        translation_file.read_text(encoding='utf-8')))
+    assert baseline.keys() == localized.keys()
+    differences = {
+        '.'.join(path): {
+            'baseline': sorted(expected), 'localized': sorted(localized[path])}
+        for path, expected in baseline.items()
+        if expected != localized[path]}
+    assert not differences, (
+        f'{translation_file.stem} placeholder mismatch: {differences}')
+
+
 def test_localized_form_placeholders_are_supplied_for_all_languages():
     tree = ast.parse((COMPONENT / 'config_flow.py').read_text(encoding='utf-8'))
     translations = {
