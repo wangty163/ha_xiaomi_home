@@ -7,6 +7,7 @@ import ast
 import asyncio
 import copy
 import hashlib
+import json
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -26,13 +27,13 @@ ENTITY_CLASSES = (
 # the new snapshot must reproduce these methods, not a handwritten model.
 ORIGINAL_ADDED_HASHES = {
     'MIoTServiceEntity':
-        'be05fcc2202f3b238e42a9beffea21b055770f83defd0b96673840aa9f8c87ed',
+        'f6c4ae928be3075bb053c4f48cefa9153de341496ec49c2b4dd5fbd6f4b13819',
     'MIoTPropertyEntity':
-        'ae2e9fa5870557a4a968d7c86d5fa2cb70c5db4bd48967ce95b09576d1a26503',
+        '8c94a518bdadf30236cef9fde1a2bf2332f1d8b443405c7854f8f3e8752fddb8',
     'MIoTEventEntity':
-        'ff7a506742cfcc824c1afacfa2b82904345e6239d2a3307186f978bf6da62d00',
+        'c10bf010a7dee7f99c0ad2141d34a20d44f0f55622998cc0205da4f3e2c371a8',
     'MIoTActionEntity':
-        'cab643add679ac5d6047dab9f6cafe93ac2b4d581641be726708b6807a2d422e',
+        '737689f3a510fa657116e3514eeefb62d6e6dbdc245adeaeb86949e2953486d1',
 }
 
 
@@ -78,6 +79,22 @@ class LoopBoundary:
             handler(*args)
 
 
+def ast_fingerprint(node):
+    """Keep fingerprints stable across Python AST dump-format changes."""
+    def normalize(value):
+        if isinstance(value, ast.AST):
+            return [type(value).__name__, [
+                [name, normalize(child)]
+                for name, child in ast.iter_fields(value)
+                if not (name == 'type_params' and child == [])]]
+        if isinstance(value, list):
+            return [normalize(child) for child in value]
+        return value
+
+    serialized = json.dumps(normalize(node), separators=(',', ':'))
+    return hashlib.sha256(serialized.encode()).hexdigest()
+
+
 def load_classes(original=False):
     """Load actual constructors, subscriptions, updates, and removal logic."""
     tree = ast.parse(SOURCE.read_text(encoding='utf-8'))
@@ -97,7 +114,7 @@ def load_classes(original=False):
             added.body = [node for node in added.body
                           if ast.dump(node) != snapshot]
             assert len(added.body) == previous_count - 1
-            digest = hashlib.sha256(ast.dump(added).encode()).hexdigest()
+            digest = ast_fingerprint(added)
             assert digest == ORIGINAL_ADDED_HASHES[class_node.name]
     module = ast.Module(body=[
         ast.ImportFrom(module='__future__', names=[
@@ -215,3 +232,15 @@ def test_future_transitions_and_unsubscribe_keep_native_behavior(class_name):
     case.client.request_refresh_prop.assert_not_called()
     case.client.action_async.assert_not_called()
     case.client.set_prop_async.assert_not_called()
+
+
+def test_ast_fingerprint_normalizes_only_empty_new_type_parameters():
+    method = ast.parse('async def added():\n    return []').body[0]
+    expected = ast_fingerprint(method)
+    # Python 3.12 added this field; newer ast.dump versions omit empty lists.
+    if 'type_params' not in method._fields:
+        method._fields = (*method._fields, 'type_params')
+    method.type_params = []
+    assert ast_fingerprint(method) == expected
+    method.type_params = [ast.Name(id='T', ctx=ast.Load())]
+    assert ast_fingerprint(method) != expected
