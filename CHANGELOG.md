@@ -10,6 +10,7 @@
 - Preserve legitimate zero and false cloud values, including the speaker stopped state.
 - Include explicit speaker playback refresh and freshness invalidation in the released integration instead of live-only changes.
 - Supply all localized configuration placeholders after the upstream rebase.
+- Remove the duplicate cryptography requirement because Home Assistant provides it as a core dependency.
 
 ## Upstream v0.5.0 (included in v0.5.4)
 ### Added
