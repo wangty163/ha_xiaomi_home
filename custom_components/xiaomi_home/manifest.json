@@ -22,10 +22,9 @@
         "construct>=2.10.56",
         "paho-mqtt",
         "numpy",
-        "cryptography",
         "psutil"
     ],
-    "version": "v0.5.3",
+    "version": "v0.5.4",
     "zeroconf": [
         "_miot-central._tcp.local."
     ]
