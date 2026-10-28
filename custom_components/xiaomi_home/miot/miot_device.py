@@ -1043,6 +1043,8 @@ class MIoTServiceEntity(Entity):
             state_id = f's.{self.entity_data.spec.iid}'
         self._state_sub_id = self.miot_device.sub_device_state(
             key=state_id, handler=self.__on_device_state_changed)
+        # The device may change state after construction, before registration.
+        self._attr_available = self.miot_device.online
         # Sub prop
         for prop in self.entity_data.props:
             if not prop.notifiable and not prop.readable:
@@ -1322,6 +1324,7 @@ class MIoTPropertyEntity(Entity):
         self._state_sub_id = self.miot_device.sub_device_state(
             key=f'{ self.service.iid}.{self.spec.iid}',
             handler=self.__on_device_state_changed)
+        self._attr_available = self.miot_device.online
         # Sub value changed
         self._value_sub_id = self.miot_device.sub_property(
             handler=self.__on_value_changed,
@@ -1475,6 +1478,7 @@ class MIoTEventEntity(Entity):
         self._state_sub_id = self.miot_device.sub_device_state(
             key=f'event.{ self.service.iid}.{self.spec.iid}',
             handler=self.__on_device_state_changed)
+        self._attr_available = self.miot_device.online
         # Sub value changed
         self._value_sub_id = self.miot_device.sub_event(
             handler=self.__on_event_occurred,
@@ -1582,6 +1586,7 @@ class MIoTActionEntity(Entity):
         self._state_sub_id = self.miot_device.sub_device_state(
             key=f'a.{ self.service.iid}.{self.spec.iid}',
             handler=self.__on_device_state_changed)
+        self._attr_available = self.miot_device.online
 
     async def async_will_remove_from_hass(self) -> None:
         self.miot_device.unsub_device_state(

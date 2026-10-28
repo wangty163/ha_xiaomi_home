@@ -3,6 +3,7 @@
 
 - Restore the English translation placeholder baseline and align Russian OAuth links so Home Assistant can validate localized configuration forms at startup.
 - Check every localized string against the English placeholder set in regression tests.
+- Synchronize availability with current device state when entities register, closing the cold-start gap between construction and subscription for service, property, event and action entities.
 
 ## v0.5.4
 ### Changed
