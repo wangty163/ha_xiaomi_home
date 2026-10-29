@@ -58,8 +58,8 @@ class PropertyRefreshTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(set(expected_keys), set(pending))
         for key, params in pending.items():
             self.assertEqual({'did', 'siid', 'piid'}, set(params))
-            self.assertEqual(
-                f'{params["did"]}|{params["siid"]}|{params["piid"]}', key)
+            did, siid, piid = (params[name] for name in ('did', 'siid', 'piid'))
+            self.assertEqual(f'{did}|{siid}|{piid}', key)
         json.dumps(list(pending.values()))
 
     @staticmethod
