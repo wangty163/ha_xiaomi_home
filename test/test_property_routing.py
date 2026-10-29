@@ -86,6 +86,7 @@ def load_client(source):
         'sub_prop', 'unsub_prop', 'sub_event', 'remove_device_async',
         'get_prop_async', '__refresh_props_from_cloud',
         '__refresh_props_from_gw', '__refresh_props_from_lan',
+        '__refresh_props_from_local',
         '__refresh_props_handler',
         '__cloud_property_overrides', '__sync_cloud_property_subscriptions',
         '__sub_from', '__unsub_from', '__update_device_msg_sub',
