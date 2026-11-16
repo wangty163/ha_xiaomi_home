@@ -85,10 +85,10 @@ REFRESH_CLOUD_DEVICES_DELAY = 6
 REFRESH_CLOUD_DEVICES_RETRY_DELAY = 60
 REFRESH_GATEWAY_DEVICES_DELAY = 3
 
-# The M30 Pro exposes its Wi-Fi lithium battery through the cloud, but its
-# gateway route only covers part of the device. Keep this readable/notifiable
-# property on its authoritative source without changing other data or events.
-CLOUD_PROPERTY_OVERRIDES = {'xiaomi.lock.s20pro': ((9, 1),)}
+# The M30 Pro exposes both battery levels through the cloud, but its gateway
+# cannot read either property. Keep lithium (9.1) and AA (4.1003) batteries on
+# their authoritative source without changing other device data or events.
+CLOUD_PROPERTY_OVERRIDES = {'xiaomi.lock.s20pro': ((9, 1), (4, 1003))}
 
 @dataclass
 class MIoTClientSub:

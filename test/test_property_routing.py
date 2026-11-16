@@ -423,6 +423,131 @@ class XiaomiHomePropertyRoutingTest(unittest.TestCase):
         self.assertEqual({}, client._refresh_props_list)
         self.assertEqual([91], battery)
 
+    def test_dry_battery_cloud_route_preserves_lithium_and_local_events(self):
+        client = self.client()
+        dry = self.subscribe(client, 4, 1003)
+        lithium = self.subscribe(client)
+        events = []
+        client.sub_event(
+            'lock', lambda params, ctx: events.append(params), siid=2, eiid=1)
+        self.route(client)
+        client._mips_cloud.property('lock', 4, 1003, 100)
+        client._mips_cloud.property('lock', 9, 1, 76)
+        client._mips_local['hub'].property('lock', 4, 1003, 33)
+        client._mips_local['hub'].property('lock', 9, 1, 13)
+        client._mips_cloud.event('lock')
+        client._mips_local['hub'].event('lock')
+        self.assertEqual([100], dry)
+        self.assertEqual([76], lithium)
+        self.assertEqual(1, len(events))
+        self.assertEqual('hub', client._sub_source_list['lock'])
+
+    def test_dry_battery_cloud_wildcard_dispatches_once(self):
+        client = self.client(gateway=False)
+        dry = self.subscribe(client, 4, 1003)
+        self.route(client)
+        client._mips_cloud.property('lock', 4, 1003, 100)
+        self.assertEqual([100], dry)
+
+    def test_other_model_dry_battery_keeps_gateway_route(self):
+        client = self.client(model='other.device')
+        received = self.subscribe(client, 4, 1003)
+        self.route(client)
+        client._mips_cloud.property('lock', 4, 1003, 100)
+        client._mips_local['hub'].property('lock', 4, 1003, 33)
+        self.assertEqual([33], received)
+        self.assertNotIn(('lock', 4, 1003), client._mips_cloud.properties)
+
+    def test_both_batteries_reconnect_and_unsubscribe_independently(self):
+        client = self.client()
+        self.subscribe(client)
+        self.subscribe(client, 4, 1003)
+        self.route(client)
+        client._mips_cloud.properties.clear()
+        client._mips_cloud.mips_state = False
+        self.connect(client)
+        calls = [call.kwargs
+                 for call in client.request_refresh_prop.call_args_list]
+        self.assertCountEqual([
+            {'did': 'lock', 'siid': 9, 'piid': 1},
+            {'did': 'lock', 'siid': 4, 'piid': 1003},
+        ], calls)
+        client.unsub_prop('lock', 4, 1003)
+        self.assertNotIn(('lock', 4, 1003), client._mips_cloud.properties)
+        self.assertIn(('lock', 9, 1), client._mips_cloud.properties)
+        client.request_refresh_prop.reset_mock()
+        self.connect(client)
+        client.request_refresh_prop.assert_called_once_with(
+            did='lock', siid=9, piid=1)
+
+    def test_dry_battery_getter_accepts_zero_without_local_fallback(self):
+        for result in (0, None, RuntimeError('cloud unavailable')):
+            with self.subTest(result=result):
+                client = self.client()
+                client._device_list_gateway['lock']['specv2_access'] = True
+                client._device_list_lan = {'lock': {'online': True}}
+                if isinstance(result, Exception):
+                    client._http.get_prop_async.side_effect = result
+                else:
+                    client._http.get_prop_async.return_value = result
+                value = asyncio.run(client.get_prop_async('lock', 4, 1003))
+                self.assertEqual(0 if result == 0 else None, value)
+                client._mips_local['hub'].get_prop_async.assert_not_awaited()
+                client._miot_lan.get_prop_async.assert_not_awaited()
+
+    def test_dry_battery_local_batch_cannot_publish_stale_values(self):
+        for route in ('gw', 'lan'):
+            with self.subTest(route=route):
+                client = self.client()
+                received = self.subscribe(client, 4, 1003)
+                client._refresh_props_list = {'lock|4|1003': {
+                    'did': 'lock', 'siid': 4, 'piid': 1003}}
+                if route == 'lan':
+                    client._mips_local = {}
+                    client._device_list_lan = {'lock': {'online': True}}
+                method = getattr(
+                    client, f'_MIoTClient__refresh_props_from_{route}')
+                self.assertFalse(asyncio.run(method()))
+                self.assertIn('lock|4|1003', client._refresh_props_list)
+                self.assertEqual([], received)
+                client._miot_lan.get_prop_async.assert_not_awaited()
+                for gateway in client._mips_local.values():
+                    gateway.get_prop_async.assert_not_awaited()
+
+    def test_dry_battery_offline_removal_does_not_restore_subscription(self):
+        for remove in (False, True):
+            with self.subTest(remove=remove):
+                client = self.client()
+                self.subscribe(client, 4, 1003)
+                self.route(client)
+                client._mips_cloud.properties.clear()
+                client._mips_cloud.mips_state = False
+                if remove:
+                    asyncio.run(client.remove_device_async('lock'))
+                else:
+                    client.unsub_prop('lock', 4, 1003)
+                self.connect(client)
+                client.request_refresh_prop.assert_not_called()
+                self.assertNotIn(
+                    ('lock', 4, 1003), client._mips_cloud.properties)
+
+    def test_dry_battery_missing_cloud_reply_keeps_bounded_retry_budget(self):
+        client = self.client()
+        received = self.subscribe(client, 4, 1003)
+        client._refresh_props_list = {'lock|4|1003': {
+            'did': 'lock', 'siid': 4, 'piid': 1003}}
+        client._http.get_props_async.return_value = [
+            {'did': 'lock', 'siid': 4, 'piid': 1003, 'code': -704042011}]
+        for attempt in range(4):
+            asyncio.run(client._MIoTClient__refresh_props_handler())
+            self.assertEqual(attempt < 3, bool(client._refresh_props_list))
+        self.assertEqual(4, client._http.get_props_async.await_count)
+        self.assertEqual(0, client._refresh_props_retry_count)
+        self.assertIsNone(client._refresh_props_timer)
+        self.assertEqual(3, client._main_loop.call_later.call_count)
+        client._mips_local['hub'].get_prop_async.assert_not_awaited()
+        self.assertEqual([], received)
+
     def test_missing_cloud_reply_stops_at_existing_retry_budget(self):
         client = self.client()
         received = self.subscribe(client)

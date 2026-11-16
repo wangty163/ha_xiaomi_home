@@ -1,4 +1,10 @@
 # CHANGELOG
+## v0.5.7
+
+- Keep both M30 Pro battery properties on precise cloud subscriptions: lithium (9.1) and AA dry batteries (4.1003). The local gateway cannot read either property; other properties and device events retain their selected local route.
+- Cover dry-battery delivery, cloud reconnects, independent unsubscription, stale local-value rejection, zero values, cloud-only fallback and bounded retries in the published regression suite.
+- Publish complete source and tests exported from the Home Assistant monorepo; no live-only overlays or periodic battery workarounds are required.
+
 ## v0.5.5
 
 - Restore the English translation placeholder baseline and align Russian OAuth links so Home Assistant can validate localized configuration forms at startup.

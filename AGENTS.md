@@ -1,15 +1,20 @@
 # Home Assistant Integration Repository Contract
 
-This repository is the canonical source for its Home Assistant custom
-integration. These rules are mandatory for every human or automated agent.
+This GitHub repository distributes the Xiaomi Home custom integration through
+HACS. Development lives in the Home Assistant monorepo: `integrations/xiaomi_home/`
+for runtime source, `tests/xiaomi_home/` for tests, and
+`scripts/xiaomi-home-release/` for export and release inputs. Export reviewed
+changes through a topic branch and pull request here; do not maintain a second
+development source or finish with an uncommitted live overlay. These rules are
+mandatory for every human or automated agent.
 
 ## Source-of-truth rules
 
-- Make production changes in this repository, never only in a live
-  `custom_components` directory.
+- Make production changes in the monorepo source and export them to this
+  distribution repository, never only in a live `custom_components` directory.
 - Treat a live-only difference as uncommitted source: preserve the diff, bring
-  it back to a branch here, add tests, review it, and publish it through the
-  normal release path.
+  it back to the monorepo, add tests, review the exported branch here, and
+  publish it through the normal release path.
 - Do not finish with a manual overlay. The final live tree must come from the
   exact GitHub release recorded as installed by HACS.
 - Keep credentials, tokens, account data, packet captures, databases, Home
